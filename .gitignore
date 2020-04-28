@@ -1,4 +1,9 @@
-/Library
-/Logs
-/Packages
-/ProjectSettings
+/Library/
+/Logs/
+/Packages/
+/ProjectSettings/
+.vs/
+.vs/Retro-basketball/xs/UserPrefs.xml
+.vs/Retro-basketball/xs/sqlite3/storage.ide-wal
+.vs/Retro-basketball/xs/sqlite3/storage.ide-shm
+.vs/Retro-basketball/xs/sqlite3/storage.ide
