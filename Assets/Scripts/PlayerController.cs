@@ -12,12 +12,15 @@ public class PlayerController : MonoBehaviour
     private float horizontalLimit = 19.0f;
     private float verticalLimit = 5;
     private float jumpLimit = 0.7f;
+
+    public bool hasBall;
    
 
     // Start is called before the first frame update
     void Start()
     {
         playerRb = GetComponent<Rigidbody>();
+        hasBall = false;
     }
 
     // Update is called once per frame
@@ -26,8 +29,7 @@ public class PlayerController : MonoBehaviour
         float forwardInput = Input.GetAxis("Vertical");
         float rightInput = Input.GetAxis("Horizontal");
 
-        BaseMovement(forwardInput, rightInput);
-        
+        BaseMovement(forwardInput, rightInput);        
     }
 
     /**
@@ -72,6 +74,63 @@ public class PlayerController : MonoBehaviour
         if (Input.GetKey(KeyCode.Space) && transform.position.y < jumpLimit)
         {
             playerRb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+
+            if (hasBall)
+            {
+                GameObject ball = transform.GetChild(transform.childCount - 1).gameObject;
+                Rigidbody ballRb = ball.GetComponent<Rigidbody>();
+
+                ballRb.position = playerRb.transform.position + new Vector3(0.55f, 1.2f, 0.01f);
+            }
+        }
+
+        if (transform.position.y >= jumpLimit && hasBall)
+        {
+            shootBall();
+            //hasBall = false;
         }
     }
+
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Ball"))
+        {
+            GameObject ball = collision.gameObject;
+            Rigidbody ballRb = ball.GetComponent<Rigidbody>();
+            BallController ballController = ball.GetComponent<BallController>();
+
+            pickUp(ballRb);
+            ball.transform.SetParent(gameObject.transform);
+
+            hasBall = true;
+            ballController.DisableRagdoll();
+
+        }
+    }
+
+
+    private void pickUp(Rigidbody obj)
+    {
+        obj.transform.position = playerRb.transform.position + new Vector3(0.36f, 0.55f, -0.38f);
+    }
+
+
+    private void shootBall()
+    {
+        if (hasBall)
+        {
+            GameObject ball = transform.GetChild(transform.childCount - 1).gameObject;
+            Rigidbody ballRb = ball.GetComponent<Rigidbody>();
+            BallController ballController = ball.GetComponent<BallController>();
+
+            ball.transform.parent = null;
+            ballController.EnableRagdoll();
+
+            ballRb.AddForce((Vector3.up * 12 + Vector3.right * 8)  * transform.position.y, ForceMode.Impulse);
+
+            hasBall = false;
+        }
+    }
+
 }
