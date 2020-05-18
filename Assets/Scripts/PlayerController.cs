@@ -14,6 +14,9 @@ public class PlayerController : MonoBehaviour
     private float jumpLimit = 0.7f;
 
     public bool hasBall;
+    public bool lookingRight = true;
+
+    public GameObject hoop;
    
 
     // Start is called before the first frame update
@@ -41,11 +44,29 @@ public class PlayerController : MonoBehaviour
     void BaseMovement(float verticalInput, float horizontalInput)
     {
 
+        
+
         // Cancel horizontal and verital movement while jumping.
         if (transform.position.y < 0.1f)
         {
-            transform.Translate(Vector3.left * verticalInput * Time.deltaTime * speed);
-            transform.Translate(Vector3.forward * horizontalInput * Time.deltaTime * speed);
+            if (horizontalInput < 0 && lookingRight || horizontalInput > 0 && !lookingRight)
+            {
+                transform.RotateAround(transform.position, transform.up, 180f);
+                lookingRight = !lookingRight;
+            }
+
+
+            if (lookingRight)
+            {
+                transform.Translate(Vector3.forward * horizontalInput * Time.deltaTime * speed);
+                transform.Translate(Vector3.left * verticalInput * Time.deltaTime * speed);
+
+            }
+            else if (!lookingRight)
+            {
+                transform.Translate(Vector3.back * horizontalInput * Time.deltaTime * speed);
+                transform.Translate(Vector3.right * verticalInput * Time.deltaTime * speed);
+            }
         }
 
 
@@ -80,21 +101,43 @@ public class PlayerController : MonoBehaviour
                 GameObject ball = transform.GetChild(transform.childCount - 1).gameObject;
                 Rigidbody ballRb = ball.GetComponent<Rigidbody>();
 
+                //if (lookingRight)
+                //{
+                //    ballRb.position = playerRb.transform.position + new Vector3(0.55f, 1.2f, 0.01f);
+                //}
+                //else if (!lookingRight)
+                //{
+                //    ballRb.position = playerRb.transform.position + new Vector3(-0.55f, 1.2f, 0.01f);
+                //}
+
+                if (!lookingRight)
+                {
+                    transform.RotateAround(transform.position, transform.up, 180f);
+                    lookingRight = true;
+                }
+
+
                 ballRb.position = playerRb.transform.position + new Vector3(0.55f, 1.2f, 0.01f);
+
+
+                
             }
         }
 
-        if (transform.position.y >= jumpLimit && hasBall)
+        if (Input.GetKeyUp(KeyCode.Space) && hasBall)
         {
+
             shootBall();
             //hasBall = false;
         }
+
+
     }
 
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.CompareTag("Ball"))
+        if (collision.gameObject.CompareTag("Ball") && transform.position.y < 0.1)
         {
             GameObject ball = collision.gameObject;
             Rigidbody ballRb = ball.GetComponent<Rigidbody>();
@@ -118,19 +161,19 @@ public class PlayerController : MonoBehaviour
 
     private void shootBall()
     {
-        if (hasBall)
-        {
-            GameObject ball = transform.GetChild(transform.childCount - 1).gameObject;
-            Rigidbody ballRb = ball.GetComponent<Rigidbody>();
-            BallController ballController = ball.GetComponent<BallController>();
 
-            ball.transform.parent = null;
-            ballController.EnableRagdoll();
+        GameObject ball = transform.GetChild(transform.childCount - 1).gameObject;
+        Rigidbody ballRb = ball.GetComponent<Rigidbody>();
+        BallController ballController = ball.GetComponent<BallController>();
 
-            ballRb.AddForce((Vector3.up * 12 + Vector3.right * 8)  * transform.position.y, ForceMode.Impulse);
+        Vector3 distanceVec3 = hoop.transform.position - ballRb.transform.position;
+        ball.transform.parent = null;
+        ballController.EnableRagdoll();
+        //ballRb.AddForce((Vector3.up * 8 + Vector3.right * 5) * transform.position.y, ForceMode.Impulse);
+        ballRb.AddForce((distanceVec3 + Vector3.up * 6), ForceMode.Impulse);
+        hasBall = false;
 
-            hasBall = false;
-        }
+
     }
 
 }

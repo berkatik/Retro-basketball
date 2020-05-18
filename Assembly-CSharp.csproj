@@ -64,6 +64,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Scripts\BallController.cs" />
+    <Compile Include="Assets\Scripts\CameraContoller.cs" />
+    <Compile Include="Assets\Scripts\HoopController.cs" />
     <Compile Include="Assets\Scripts\PlayerController.cs" />
     <None Include="Assets\Course Library\_Source_Files\_LICENSE.txt" />
     <None Include="Assets\Course Library\_Source_Files\Materials\UnlitVertexColour_Alpha.shader" />

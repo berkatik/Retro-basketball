@@ -5,17 +5,19 @@ using UnityEngine;
 public class BallController : MonoBehaviour
 {
 
-    private Rigidbody rb;
+    private Rigidbody BallRb;
     public bool isCarried = false;
     // Start is called before the first frame update
     void Start()
     {
-        rb = GetComponent<Rigidbody>();
+        BallRb = GetComponent<Rigidbody>();
     }
 
     // Update is called once per frame
     void Update()
     {
+        float yPos = BallRb.transform.position.y;
+
         
     }
 
@@ -23,16 +25,16 @@ public class BallController : MonoBehaviour
 
     public void EnableRagdoll()
     {
-        rb.isKinematic = false;
-        rb.detectCollisions = true;
+        BallRb.isKinematic = false;
+        BallRb.detectCollisions = true;
         isCarried = false;
 
-}
+    }
 
-public void DisableRagdoll()
+    public void DisableRagdoll()
     {
-        rb.isKinematic = true;
-        rb.detectCollisions = false;
+        BallRb.isKinematic = true;
+        BallRb.detectCollisions = false;
         isCarried = true;
     }
 }
