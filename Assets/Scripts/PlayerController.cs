@@ -2,49 +2,30 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerController : MonoBehaviour
+public class PlayerController : CharacterController
 {
-    private Rigidbody playerRb;
 
-    public float speed = 5.0f;
-    public float jumpForce = 20.0f;
-
-    private float horizontalLimit = 19.0f;
-    private float verticalLimit = 5;
-    private float jumpLimit = 0.7f;
-
-    public bool hasBall;
-    public bool lookingRight = true;
-
-    public GameObject hoop;
-   
-
-    // Start is called before the first frame update
-    void Start()
+    protected override void Start()
     {
-        playerRb = GetComponent<Rigidbody>();
+        characterRb = GetComponent<Rigidbody>();
         hasBall = false;
     }
 
-    // Update is called once per frame
-    void Update()
+    protected override void Update()
     {
         float forwardInput = Input.GetAxis("Vertical");
         float rightInput = Input.GetAxis("Horizontal");
 
-        BaseMovement(forwardInput, rightInput);        
+        BaseMovement(forwardInput, rightInput);
+
+        Vector3 rotationVector = transform.rotation.eulerAngles;
+        rotationVector.x = 0;
+        rotationVector.z = 0;
+        transform.rotation = Quaternion.Euler(rotationVector);
     }
 
-    /**
-     * This method is reponsible of basic movement of the characters.
-     *
-     * @arg verticalInput: Input for the players movement on the vertical axis.
-     * @arg horizontalInput: Input for the players movement on the horizontal axis.
-     */
     void BaseMovement(float verticalInput, float horizontalInput)
     {
-
-        
 
         // Cancel horizontal and verital movement while jumping.
         if (transform.position.y < 0.1f)
@@ -94,7 +75,7 @@ public class PlayerController : MonoBehaviour
         // Jumping, limited by y plane position.
         if (Input.GetKey(KeyCode.Space) && transform.position.y < jumpLimit)
         {
-            playerRb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+            characterRb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
 
             if (hasBall)
             {
@@ -117,63 +98,16 @@ public class PlayerController : MonoBehaviour
                 }
 
 
-                ballRb.position = playerRb.transform.position + new Vector3(0.55f, 1.2f, 0.01f);
-
-
-                
+                ballRb.position = characterRb.transform.position + new Vector3(0.55f, 1.2f, 0.01f);
             }
         }
 
         if (Input.GetKeyUp(KeyCode.Space) && hasBall)
         {
 
-            shootBall();
+            ShootBall();
             //hasBall = false;
         }
-
-
-    }
-
-
-    private void OnCollisionEnter(Collision collision)
-    {
-        if (collision.gameObject.CompareTag("Ball") && transform.position.y < 0.1)
-        {
-            GameObject ball = collision.gameObject;
-            Rigidbody ballRb = ball.GetComponent<Rigidbody>();
-            BallController ballController = ball.GetComponent<BallController>();
-
-            pickUp(ballRb);
-            ball.transform.SetParent(gameObject.transform);
-
-            hasBall = true;
-            ballController.DisableRagdoll();
-
-        }
-    }
-
-
-    private void pickUp(Rigidbody obj)
-    {
-        obj.transform.position = playerRb.transform.position + new Vector3(0.36f, 0.55f, -0.38f);
-    }
-
-
-    private void shootBall()
-    {
-
-        GameObject ball = transform.GetChild(transform.childCount - 1).gameObject;
-        Rigidbody ballRb = ball.GetComponent<Rigidbody>();
-        BallController ballController = ball.GetComponent<BallController>();
-
-        Vector3 distanceVec3 = hoop.transform.position - ballRb.transform.position;
-        ball.transform.parent = null;
-        ballController.EnableRagdoll();
-        //ballRb.AddForce((Vector3.up * 8 + Vector3.right * 5) * transform.position.y, ForceMode.Impulse);
-        ballRb.AddForce((distanceVec3 + Vector3.up * 6), ForceMode.Impulse);
-        hasBall = false;
-
-
     }
 
 }
