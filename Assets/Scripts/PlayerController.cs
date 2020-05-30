@@ -8,11 +8,12 @@ public class PlayerController : CharacterController
     protected override void Start()
     {
         characterRb = GetComponent<Rigidbody>();
-        hasBall = false;
     }
 
     protected override void Update()
     {
+        print(Input.GetKey(KeyCode.X));
+
         float forwardInput = Input.GetAxis("Vertical");
         float rightInput = Input.GetAxis("Horizontal");
 
@@ -98,9 +99,16 @@ public class PlayerController : CharacterController
                 }
 
 
-                ballRb.position = characterRb.transform.position + new Vector3(0.55f, 1.2f, 0.01f);
+                ballRb.position = characterRb.transform.position + new Vector3(0.55f, 2.0f, 0.01f);
             }
+
         }
+
+        if (Input.GetKey(KeyCode.X) && hasBall)
+        {
+            Pass();
+        }
+        
 
         if (Input.GetKeyUp(KeyCode.Space) && hasBall)
         {
