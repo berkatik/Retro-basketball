@@ -12,8 +12,6 @@ public class PlayerController : CharacterController
 
     protected override void Update()
     {
-        print(Input.GetKey(KeyCode.X));
-
         float forwardInput = Input.GetAxis("Vertical");
         float rightInput = Input.GetAxis("Horizontal");
 
@@ -80,18 +78,6 @@ public class PlayerController : CharacterController
 
             if (hasBall)
             {
-                GameObject ball = transform.GetChild(transform.childCount - 1).gameObject;
-                Rigidbody ballRb = ball.GetComponent<Rigidbody>();
-
-                //if (lookingRight)
-                //{
-                //    ballRb.position = playerRb.transform.position + new Vector3(0.55f, 1.2f, 0.01f);
-                //}
-                //else if (!lookingRight)
-                //{
-                //    ballRb.position = playerRb.transform.position + new Vector3(-0.55f, 1.2f, 0.01f);
-                //}
-
                 if (!lookingRight)
                 {
                     transform.RotateAround(transform.position, transform.up, 180f);
@@ -99,7 +85,7 @@ public class PlayerController : CharacterController
                 }
 
 
-                ballRb.position = characterRb.transform.position + new Vector3(0.55f, 2.0f, 0.01f);
+                ball.transform.position = characterRb.transform.position + new Vector3(0.55f, 2.0f, 0.01f);
             }
 
         }
@@ -116,6 +102,20 @@ public class PlayerController : CharacterController
             ShootBall();
             //hasBall = false;
         }
+    }
+
+    protected override void ShootBall()
+    {
+        Rigidbody ballRb = ball.GetComponent<Rigidbody>();
+        BallController ballController = ball.GetComponent<BallController>();
+
+        Vector3 distanceVec3 = hoop.transform.position - ballRb.transform.position;
+        ball.transform.parent = null;
+        ballController.EnableRagdoll();
+        //ballRb.AddForce((Vector3.up * 8 + Vector3.right * 5) * transform.position.y, ForceMode.Impulse);
+        ballRb.AddForce((distanceVec3 + Vector3.up * 6), ForceMode.Impulse);
+        hasBall = false;
+        ballController.setIsCarried(false);
     }
 
 }

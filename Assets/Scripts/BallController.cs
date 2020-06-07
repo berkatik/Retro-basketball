@@ -17,11 +17,18 @@ public class BallController : MonoBehaviour
     void Update()
     {
         float yPos = BallRb.transform.position.y;
-
-        
     }
 
 
+    public bool getIsCarried()
+    {
+        return isCarried;
+    }
+
+    public void setIsCarried(bool val)
+    {
+        this.isCarried = val;
+    }
 
     public void EnableRagdoll()
     {
