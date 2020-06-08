@@ -11,15 +11,13 @@ public class CameraContoller : MonoBehaviour
     void Update()
     {
         float height = Ball.transform.position.y;
+        float x = Ball.transform.position.x;
 
-
-        if (height >= 0.55f)
+        if (x < 4.5f && x > -4.5)
         {
-            transform.position = Vector3.Lerp(transform.position, new Vector3(Ball.transform.position.x, height + Offset.y, Offset.z), Time.deltaTime * moveSpeed);
-        } else
-        {
-            transform.position = Vector3.Lerp(transform.position, new Vector3(Ball.transform.position.x, Offset.y, Offset.z), Time.deltaTime * moveSpeed);
+            if (height >= 0.55f && height + Offset.y <= 5.0f) transform.position = Vector3.Lerp(transform.position, new Vector3(Ball.transform.position.x, height + Offset.y, Offset.z), Time.deltaTime * moveSpeed);
+            else transform.position = Vector3.Lerp(transform.position, new Vector3(Ball.transform.position.x, Offset.y, Offset.z), Time.deltaTime * moveSpeed);
         }
-        
+        else if (height >= 0.55f && height + Offset.y <= 5.0f) transform.position = Vector3.Lerp(transform.position, new Vector3(transform.position.x, height + Offset.y, Offset.z), Time.deltaTime * moveSpeed);
     }
 }

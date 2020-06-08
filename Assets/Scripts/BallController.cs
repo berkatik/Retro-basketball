@@ -16,7 +16,6 @@ public class BallController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        float yPos = BallRb.transform.position.y;
     }
 
 
@@ -27,7 +26,7 @@ public class BallController : MonoBehaviour
 
     public void setIsCarried(bool val)
     {
-        this.isCarried = val;
+        isCarried = val;
     }
 
     public void EnableRagdoll()

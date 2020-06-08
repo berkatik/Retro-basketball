@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using System;
 
@@ -8,10 +7,10 @@ public class CharacterController : MonoBehaviour
     protected Rigidbody characterRb;
     public GameObject ball;
     public GameObject hoop;
-    public GameObject teamMate; // Temporary
+    public GameObject teamMate;
 
-    private BallController ballController;
-    private CharacterController teamMateController;
+    protected BallController ballController;
+    protected CharacterController teamMateController;
 
     public float speed = 4.0f;
     public float jumpForce = 35.0f;
@@ -23,6 +22,8 @@ public class CharacterController : MonoBehaviour
     protected bool hasBall = false;
     protected bool teamHasBall = false;
     public bool lookingRight = true;
+    public bool defendent = false;
+
     public int team;
     private Vector3 randPos;
     private System.Random rand;
@@ -49,17 +50,20 @@ public class CharacterController : MonoBehaviour
 
         teamHasBall = teamMateController.GetHasBall();
 
-        if (!hasBall && distanceRadius < 5.0f && ball.transform.position.y < 1f && !ballController.getIsCarried())
+        if (!hasBall && distanceRadius < 5.0f && ball.transform.position.y < 1.0f && !ballController.getIsCarried())
         {
-            ChaseBall();
-        } else if (hasBall)
+            StartCoroutine(ChaseBall(0.3f, 0.3f));
+        }
+        else if (hasBall)
         {
             Attack();
         } else if (teamHasBall)
         {
             Support();
-        }
-        else
+        } else if(!hasBall & distanceRadius < 5.0f && ballController.getIsCarried() && defendent)
+        {
+            StartCoroutine(ChaseBall(1.0f, 1.0f));
+        } else
         {
             Retreat();
         }
@@ -88,6 +92,17 @@ public class CharacterController : MonoBehaviour
         // Play Idle Animation or call a function that can do that.
     }
 
+    IEnumerator Evade()
+    {
+        float randomNum = (float)rand.NextDouble();
+        if (randomNum <= 0.475f && transform.position.z < 4.0f) transform.position = Vector3.MoveTowards(transform.position, transform.position + new Vector3(0.0f, 0.0f, 2.0f), speed * Time.deltaTime);
+        else if (randomNum > 0.475f && randomNum <= 0.95f && transform.position.z > -4.0f) transform.position = Vector3.MoveTowards(transform.position, transform.position + new Vector3(0.0f, 0.0f, -2.0f), speed * Time.deltaTime);
+        else Pass();
+
+        yield return new WaitForSeconds(2);
+
+    }
+
     private void RandomLoc()
     {
         float xRand =  + (team == 0 ? 0.0f : 8.0f) - (float)rand.NextDouble() * 8.0f;
@@ -103,6 +118,8 @@ public class CharacterController : MonoBehaviour
         float distanceVecz = hoop.transform.position.z - transform.position.z;
 
         float distanceRadius = (float)Math.Sqrt(Math.Pow(distanceVecx, 2) + Math.Pow(distanceVecz, 2));
+
+        Collider[] hitColliders = Physics.OverlapSphere(transform.position, 1.0f);
 
         if (team == 0 && !lookingRight)
         {
@@ -126,6 +143,17 @@ public class CharacterController : MonoBehaviour
             StartCoroutine(Idle());
         } else
         {
+            int len = hitColliders.Length;
+            for (int i = 0; i < len; i++)
+            {
+                string colliderName = hitColliders[i].gameObject.tag;
+
+                if (team == 0 && colliderName == "Team1" || team == 1 && colliderName == "Team0")
+                {
+                    StartCoroutine("Evade");
+                }
+                
+            }
 
             transform.position = Vector3.MoveTowards(transform.position, hoop.transform.position, speed * Time.deltaTime);
         }
@@ -134,11 +162,11 @@ public class CharacterController : MonoBehaviour
 
     protected virtual void Retreat()
     { 
-        if (randPos.x <= transform.position.x && lookingRight)
+        if (Math.Round(randPos.x, 1) < Math.Round(transform.position.x, 1) && lookingRight)
         {
             transform.RotateAround(transform.position, transform.up, 180.0f);
             lookingRight = false;
-        } else if (randPos.x > transform.position.x && !lookingRight)
+        } else if (Math.Round(randPos.x, 1) > Math.Round(transform.position.x, 1) && !lookingRight)
         {
             transform.RotateAround(transform.position, transform.up, 180.0f);
             lookingRight = true;
@@ -151,13 +179,14 @@ public class CharacterController : MonoBehaviour
     protected virtual void Support()
     {
         Vector3 oppositeRandPos = randPos + (team == 0 ? new Vector3(8.0f, 0.0f, 0.0f) : new Vector3(-8.0f, 0.0f, 0.0f));
+        float direction = (float)Math.Round(oppositeRandPos.x, 1);
 
-        if (oppositeRandPos.x <= transform.position.x && lookingRight)
+        if (direction < (float)Math.Round(transform.position.x, 1) && lookingRight)
         {
             transform.RotateAround(transform.position, transform.up, 180.0f);
             lookingRight = false;
         }
-        else if (oppositeRandPos.x > transform.position.x && !lookingRight)
+        else if (direction > (float)Math.Round(transform.position.x, 1) && !lookingRight)
         {
             transform.RotateAround(transform.position, transform.up, 180.0f);
             lookingRight = true;
@@ -173,8 +202,9 @@ public class CharacterController : MonoBehaviour
 
     }
 
-    protected void ChaseBall()
+    IEnumerator ChaseBall(float distanceX, float distanceZ)
     {
+
         float distanceVecx = Math.Round(ball.transform.position.x - transform.position.x, 1) == 0.0f ? 0.0f : ball.transform.position.x - transform.position.x > 0.0f ? 1.0f : -1.0f;
         float distanceVecz = Math.Round(ball.transform.position.z - transform.position.z, 1) == 0.0f ? 0.0f : ball.transform.position.z - transform.position.z > 0.0f ? 1.0f : -1.0f;
 
@@ -182,17 +212,46 @@ public class CharacterController : MonoBehaviour
         {
             transform.RotateAround(transform.position, transform.up, 180.0f);
             lookingRight = false;
-        } else if (distanceVecx > 0 && !lookingRight)
+        }
+        else if (distanceVecx > 0 && !lookingRight)
         {
             transform.RotateAround(transform.position, transform.up, 180.0f);
             lookingRight = true;
         }
 
-            //Vector3 distanceVec3 = Vector3.right * distanceVecx + Vector3.forward * distanceVecz;
+        //Vector3 distanceVec3 = Vector3.right * distanceVecx + Vector3.forward * distanceVecz;
         Vector3 distanceVec3 = new Vector3(distanceVecx, 0, distanceVecz);
-        transform.Translate(distanceVec3 * Time.deltaTime * 3, Space.World);
+        //transform.position = Vector3.MoveTowards(transform.position, distanceVec3, speed * Time.deltaTime);
+
+        if (Math.Abs(transform.position.x - ball.transform.position.x) > distanceX || Math.Abs(transform.position.z - ball.transform.position.z) > distanceZ)
+        {
+            transform.Translate(distanceVec3 * Time.deltaTime * speed, Space.World);
+        }
+
+        yield return new WaitForSeconds(0.1f);
 
     }
+
+    //protected void ChaseBall()
+    //{
+    //    float distanceVecx = Math.Round(ball.transform.position.x - transform.position.x, 1) == 0.0f ? 0.0f : ball.transform.position.x - transform.position.x > 0.0f ? 1.0f : -1.0f;
+    //    float distanceVecz = Math.Round(ball.transform.position.z - transform.position.z, 1) == 0.0f ? 0.0f : ball.transform.position.z - transform.position.z > 0.0f ? 1.0f : -1.0f;
+
+    //    if (distanceVecx < 0 && lookingRight)
+    //    {
+    //        transform.RotateAround(transform.position, transform.up, 180.0f);
+    //        lookingRight = false;
+    //    } else if (distanceVecx > 0 && !lookingRight)
+    //    {
+    //        transform.RotateAround(transform.position, transform.up, 180.0f);
+    //        lookingRight = true;
+    //    }
+
+    //        //Vector3 distanceVec3 = Vector3.right * distanceVecx + Vector3.forward * distanceVecz;
+    //    Vector3 distanceVec3 = new Vector3(distanceVecx, 0, distanceVecz);
+    //    transform.Translate(distanceVec3 * Time.deltaTime * 3, Space.World);
+
+    //}
 
 
     protected void Pass()
@@ -216,7 +275,7 @@ public class CharacterController : MonoBehaviour
                 lookingRight = true;
             }
 
-        } else
+        } else if (directionForward == -1.0f)
         {
             if (lookingRight)
             {
@@ -225,12 +284,13 @@ public class CharacterController : MonoBehaviour
             }
         }
 
-        ballRb.transform.position = characterRb.transform.position + (directionForward == 1.0f ? new Vector3(0.55f, 1.2f, 0.01f) : new Vector3(-0.55f, 1.2f, 0.01f));
+        ball.transform.position = characterRb.transform.position + (directionForward == 1.0f ? new Vector3(0.55f, 1.2f, 0.01f) : new Vector3(-0.55f, 1.2f, 0.01f));
 
         ball.transform.parent = null;
         ballController.EnableRagdoll();
 
-        ballRb.AddForce(new Vector3(directionForward * distanceVecx, 1.5f, directionUpward * distanceVecz) * 2, ForceMode.Impulse);
+        Vector3 forceVec = new Vector3(directionForward * distanceVecx, 2.0f, directionUpward * distanceVecz) * 1.5f;
+        ballRb.AddForce(forceVec,ForceMode.Impulse);
         hasBall = false;
         ballController.setIsCarried(false);
     }
@@ -246,9 +306,9 @@ public class CharacterController : MonoBehaviour
         if (transform.position.y >= jumpLimit)
         {
             Rigidbody ballRb = ball.GetComponent<Rigidbody>();
-            BallController ballController = ball.GetComponent<BallController>();
+            //BallController ballController = ball.GetComponent<BallController>();
 
-            Vector3 distanceVec3 = hoop.transform.position - ballRb.transform.position;
+            Vector3 distanceVec3 = hoop.transform.position - ball.transform.position;
             ball.transform.parent = null;
             ballController.EnableRagdoll();
             //ballRb.AddForce((Vector3.up * 8 + Vector3.right * 5) * transform.position.y, ForceMode.Impulse);
@@ -266,13 +326,15 @@ public class CharacterController : MonoBehaviour
             Rigidbody ballRb = ball.GetComponent<Rigidbody>();
             BallController ballController = ball.GetComponent<BallController>();
 
-            PickUp(ballRb);
-            ball.transform.SetParent(gameObject.transform);
+            if (!ballController.getIsCarried())
+            {
+                PickUp(ballRb);
+                ball.transform.SetParent(gameObject.transform);
 
-            ballController.DisableRagdoll();
-            hasBall = true;
-            ballController.setIsCarried(true);
-
+                ballController.DisableRagdoll();
+                hasBall = true;
+                ballController.setIsCarried(true);
+            }
         }
     }
 
