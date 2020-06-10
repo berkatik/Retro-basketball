@@ -12,6 +12,11 @@ public class CharacterController : MonoBehaviour
     protected BallController ballController;
     protected CharacterController teamMateController;
 
+    public AudioClip jumpSound;
+    public AudioClip bounceSound;
+    protected AudioSource characterAudio;
+
+
     public float speed = 4.0f;
     public float jumpForce = 35.0f;
 
@@ -23,7 +28,10 @@ public class CharacterController : MonoBehaviour
     protected bool teamHasBall = false;
     public bool lookingRight = true;
     public bool defendent = false;
+    public bool isGameActive;
 
+    public Vector3 startPosition;
+    public Vector3 startRotation;
     public int team;
     private Vector3 randPos;
     private System.Random rand;
@@ -36,36 +44,45 @@ public class CharacterController : MonoBehaviour
         rand = new System.Random(GetInstanceID());
         ballController = ball.GetComponent<BallController>();
         teamMateController = teamMate.GetComponent<CharacterController>();
+        characterAudio = GetComponent<AudioSource>();
 
+        isGameActive = false;
+        InvokeRepeating("BallBounce", 0, 1);
 
         InvokeRepeating("RandomLoc", 0.0f, 5.0f);
     }
 
     protected virtual void Update()
     {
-        float distanceVecx = ball.transform.position.x - transform.position.x;
-        float distanceVecz = ball.transform.position.z - transform.position.z;
+        if (isGameActive)
+        {
+            float distanceVecx = ball.transform.position.x - transform.position.x;
+            float distanceVecz = ball.transform.position.z - transform.position.z;
 
-        float distanceRadius = (float)Math.Sqrt(Math.Pow(distanceVecx, 2) + Math.Pow(distanceVecz, 2));
+            float distanceRadius = (float)Math.Sqrt(Math.Pow(distanceVecx, 2) + Math.Pow(distanceVecz, 2));
 
-        teamHasBall = teamMateController.GetHasBall();
+            teamHasBall = teamMateController.GetHasBall();
 
-        if (!hasBall && distanceRadius < 5.0f && ball.transform.position.y < 1.0f && !ballController.getIsCarried())
-        {
-            StartCoroutine(ChaseBall(0.3f, 0.3f));
-        }
-        else if (hasBall)
-        {
-            Attack();
-        } else if (teamHasBall)
-        {
-            Support();
-        } else if(!hasBall & distanceRadius < 5.0f && ballController.getIsCarried() && defendent)
-        {
-            StartCoroutine(ChaseBall(1.0f, 1.0f));
-        } else
-        {
-            Retreat();
+            if (!hasBall && distanceRadius < 5.0f && ball.transform.position.y < 1.0f && !ballController.getIsCarried())
+            {
+                StartCoroutine(ChaseBall(0.3f, 0.3f));
+            }
+            else if (hasBall)
+            {
+                Attack();
+            }
+            else if (teamHasBall)
+            {
+                Support();
+            }
+            else if (!hasBall & distanceRadius < 5.0f && ballController.getIsCarried() && defendent)
+            {
+                StartCoroutine(ChaseBall(1.0f, 1.0f));
+            }
+            else
+            {
+                Retreat();
+            }
         }
     }
 
@@ -76,6 +93,31 @@ public class CharacterController : MonoBehaviour
      * @arg verticalInput: Input for the players movement on the vertical axis.
      * @arg horizontalInput: Input for the players movement on the horizontal axis.
      */
+
+    public virtual void Stop()
+    {
+        isGameActive = false;
+    }
+
+    public virtual void Reset()
+    {
+        characterAudio.loop = true;
+        characterAudio.clip = null;
+        characterAudio.Stop();
+
+        transform.position = startPosition;
+        transform.rotation = Quaternion.Euler(startRotation);
+
+        if (transform.rotation.y < 0)
+        {
+            lookingRight = false;
+        } else
+        {
+            lookingRight = true;
+        }
+
+        isGameActive = true;
+    }
 
     public virtual bool GetHasBall()
     {
@@ -95,8 +137,8 @@ public class CharacterController : MonoBehaviour
     IEnumerator Evade()
     {
         float randomNum = (float)rand.NextDouble();
-        if (randomNum <= 0.475f && transform.position.z < 4.0f) transform.position = Vector3.MoveTowards(transform.position, transform.position + new Vector3(0.0f, 0.0f, 2.0f), speed * Time.deltaTime);
-        else if (randomNum > 0.475f && randomNum <= 0.95f && transform.position.z > -4.0f) transform.position = Vector3.MoveTowards(transform.position, transform.position + new Vector3(0.0f, 0.0f, -2.0f), speed * Time.deltaTime);
+        if (randomNum <= 0.45f && transform.position.z < 4.0f) transform.position = Vector3.MoveTowards(transform.position, transform.position + new Vector3(0.0f, 0.0f, 2.0f), speed * Time.deltaTime);
+        else if (randomNum > 0.45f && randomNum <= 0.9f && transform.position.z > -4.0f) transform.position = Vector3.MoveTowards(transform.position, transform.position + new Vector3(0.0f, 0.0f, -2.0f), speed * Time.deltaTime);
         else Pass();
 
         yield return new WaitForSeconds(2);
@@ -256,6 +298,10 @@ public class CharacterController : MonoBehaviour
 
     protected void Pass()
     {
+        characterAudio.loop = true;
+        characterAudio.clip = null;
+        characterAudio.Stop();
+
         //Vector3 distanceVec3 = teamMate.transform.position - transform.position;
         float directionForward = teamMate.transform.position.x > transform.position.x ? 1.0f: -1.0f;
         float directionUpward = teamMate.transform.position.z > transform.position.z ? 1.0f : -1.0f;
@@ -298,13 +344,17 @@ public class CharacterController : MonoBehaviour
 
     protected virtual void ShootBall()
     {
+        characterAudio.loop = true;
+        characterAudio.clip = null;
+        characterAudio.Stop();
 
         characterRb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
-
         ball.transform.position = characterRb.transform.position + (lookingRight ? new Vector3(0.45f, 1.8f, 0.01f) : new Vector3(-0.45f, 1.8f, 0.01f));
 
         if (transform.position.y >= jumpLimit)
         {
+            characterAudio.PlayOneShot(jumpSound, 0.5f);
+
             Rigidbody ballRb = ball.GetComponent<Rigidbody>();
             //BallController ballController = ball.GetComponent<BallController>();
 
@@ -319,6 +369,15 @@ public class CharacterController : MonoBehaviour
         
     }
 
+    IEnumerator BallBounce()
+    {
+        characterAudio.loop = true;
+        characterAudio.clip = bounceSound;
+        characterAudio.volume = 0.1f;
+        characterAudio.Play();
+        yield return null;
+    }
+
     protected void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.CompareTag("Ball") && transform.position.y < 0.1)
@@ -328,12 +387,14 @@ public class CharacterController : MonoBehaviour
 
             if (!ballController.getIsCarried())
             {
+                print("1");
                 PickUp(ballRb);
                 ball.transform.SetParent(gameObject.transform);
 
                 ballController.DisableRagdoll();
                 hasBall = true;
                 ballController.setIsCarried(true);
+                StartCoroutine("BallBounce");
             }
         }
     }

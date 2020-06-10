@@ -11,6 +11,7 @@ public class BallController : MonoBehaviour
     void Start()
     {
         BallRb = GetComponent<Rigidbody>();
+        BallRb.isKinematic = true;
     }
 
     // Update is called once per frame
@@ -18,6 +19,18 @@ public class BallController : MonoBehaviour
     {
     }
 
+
+    public void Stop()
+    {
+        BallRb.isKinematic = true;
+    }
+
+    public void Reset()
+    {
+        transform.parent = null;
+        transform.position = new Vector3(0.0f, 2.0f, 0.0f);
+        EnableRagdoll();
+    }
 
     public bool getIsCarried()
     {

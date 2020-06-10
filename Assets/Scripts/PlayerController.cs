@@ -8,19 +8,23 @@ public class PlayerController : CharacterController
     protected override void Start()
     {
         characterRb = GetComponent<Rigidbody>();
+        characterAudio = GetComponent<AudioSource>();
     }
 
     protected override void Update()
     {
-        float forwardInput = Input.GetAxis("Vertical");
-        float rightInput = Input.GetAxis("Horizontal");
+        if (isGameActive)
+        {
+            float forwardInput = Input.GetAxis("Vertical");
+            float rightInput = Input.GetAxis("Horizontal");
 
-        BaseMovement(forwardInput, rightInput);
+            BaseMovement(forwardInput, rightInput);
 
-        Vector3 rotationVector = transform.rotation.eulerAngles;
-        rotationVector.x = 0;
-        rotationVector.z = 0;
-        transform.rotation = Quaternion.Euler(rotationVector);
+            Vector3 rotationVector = transform.rotation.eulerAngles;
+            rotationVector.x = 0;
+            rotationVector.z = 0;
+            transform.rotation = Quaternion.Euler(rotationVector);
+        }
     }
 
     void BaseMovement(float verticalInput, float horizontalInput)
@@ -106,6 +110,12 @@ public class PlayerController : CharacterController
 
     protected override void ShootBall()
     {
+        characterAudio.loop = true;
+        characterAudio.clip = null;
+        characterAudio.Stop();
+
+        characterAudio.PlayOneShot(jumpSound, 0.5f);
+
         Rigidbody ballRb = ball.GetComponent<Rigidbody>();
         BallController ballController = ball.GetComponent<BallController>();
 
