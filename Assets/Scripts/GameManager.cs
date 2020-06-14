@@ -31,6 +31,12 @@ public class GameManager : MonoBehaviour
     void Update()
     {
         startButton.onClick.AddListener(StartGame);
+
+        if (Input.GetKeyDown("return"))
+        {
+            StartGame();
+        }
+        
         restartButton.onClick.AddListener(RestartGame);
 
         if (score[0] >= 10)
@@ -68,11 +74,6 @@ public class GameManager : MonoBehaviour
     IEnumerator Hold()
     {
         ball.SendMessage("Stop");
-
-        for (int i = 0; i < characterList.Length; i++)
-        {
-            characterList[i].SendMessage("Stop");
-        }
 
         yield return new WaitForSeconds(1);              
         StartGame();

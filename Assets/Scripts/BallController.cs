@@ -30,6 +30,7 @@ public class BallController : MonoBehaviour
         transform.parent = null;
         transform.position = new Vector3(0.0f, 2.0f, 0.0f);
         EnableRagdoll();
+        GetComponent<Rigidbody>().velocity = Vector3.zero;
     }
 
     public bool getIsCarried()

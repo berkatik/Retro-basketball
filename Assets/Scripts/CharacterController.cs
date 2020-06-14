@@ -101,12 +101,21 @@ public class CharacterController : MonoBehaviour
 
     public virtual void Reset()
     {
+        GetComponent<Rigidbody>().velocity = Vector3.zero;
         characterAudio.loop = true;
         characterAudio.clip = null;
         characterAudio.Stop();
 
         transform.position = startPosition;
         transform.rotation = Quaternion.Euler(startRotation);
+
+        BallController ballController = ball.GetComponent<BallController>();
+
+        ball.transform.parent = null;
+        ballController.EnableRagdoll();
+
+        hasBall = false;
+        ballController.setIsCarried(false);
 
         if (transform.rotation.y < 0)
         {
@@ -137,8 +146,8 @@ public class CharacterController : MonoBehaviour
     IEnumerator Evade()
     {
         float randomNum = (float)rand.NextDouble();
-        if (randomNum <= 0.45f && transform.position.z < 4.0f) transform.position = Vector3.MoveTowards(transform.position, transform.position + new Vector3(0.0f, 0.0f, 2.0f), speed * Time.deltaTime);
-        else if (randomNum > 0.45f && randomNum <= 0.9f && transform.position.z > -4.0f) transform.position = Vector3.MoveTowards(transform.position, transform.position + new Vector3(0.0f, 0.0f, -2.0f), speed * Time.deltaTime);
+        if (randomNum <= 0.48f && transform.position.z < 4.0f) transform.position = Vector3.MoveTowards(transform.position, transform.position + new Vector3(0.0f, 0.0f, 2.0f), speed * Time.deltaTime);
+        else if (randomNum > 0.48f && randomNum <= 0.96f && transform.position.z > -4.0f) transform.position = Vector3.MoveTowards(transform.position, transform.position + new Vector3(0.0f, 0.0f, -2.0f), speed * Time.deltaTime);
         else Pass();
 
         yield return new WaitForSeconds(2);
@@ -387,7 +396,6 @@ public class CharacterController : MonoBehaviour
 
             if (!ballController.getIsCarried())
             {
-                print("1");
                 PickUp(ballRb);
                 ball.transform.SetParent(gameObject.transform);
 
